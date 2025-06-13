@@ -16,6 +16,7 @@ import org.bukkit.util.Vector;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Iterator;
@@ -26,11 +27,7 @@ public class RemoteSession {
 
 	private Location origin;
 
-	private final Socket socket;
-
-	private BufferedReader in;
-
-	private BufferedWriter out;
+	private final SocketChannel socket;
 	
 	private Thread inThread;
 	
@@ -58,20 +55,15 @@ public class RemoteSession {
 
 	private Player attachedPlayer = null;
 
-	public RemoteSession(ELCIPlugin plugin, Socket socket) throws IOException {
+	public RemoteSession(ELCIPlugin plugin, SocketChannel socket) throws IOException {
 		this.socket = socket;
 		this.plugin = plugin;
 		init();
 	}
 
 	public void init() throws IOException {
-		socket.setTcpNoDelay(true);
-		socket.setKeepAlive(true);
-		socket.setTrafficClass(0x10);
-		this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), UTF_8));
-		this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), UTF_8));
 		startThreads();
-		plugin.getLogger().info("Opened connection to" + socket.getRemoteSocketAddress() + ".");
+		plugin.getLogger().info("Opened connection.");
 	}
 
 	protected void startThreads() {
@@ -1022,7 +1014,7 @@ public class RemoteSession {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		plugin.getLogger().info("Closed connection to" + socket.getRemoteSocketAddress() + ".");
+		plugin.getLogger().info("Closed connection.");
 	}
 
 	/** socket listening thread */
@@ -1031,7 +1023,7 @@ public class RemoteSession {
 			plugin.getLogger().info("Starting input thread");
 			while (running) {
 				try {
-					String newLine = in.readLine();
+					String newLine = readLine();
 					//System.out.println(newLine);
 					if (newLine == null) {
 						running = false;
@@ -1051,13 +1043,6 @@ public class RemoteSession {
 					}
 				} 
 			}
-			//close in buffer
-			try {
-				in.close();
-			} catch (Exception e) {
-				plugin.getLogger().warning("Failed to close in buffer");
-				e.printStackTrace();
-			}
 		}
 	}
 
@@ -1068,10 +1053,10 @@ public class RemoteSession {
 				try {
 					String line;
 					while((line = outQueue.poll()) != null) {
-						out.write(line);
-						out.write('\n');
+						write(line);
+						write("\n");
 					}
-					out.flush();
+					// flush();
 					Thread.yield();
 					Thread.sleep(1L);
 				} catch (Exception e) {
@@ -1082,14 +1067,16 @@ public class RemoteSession {
 					}
 				}
 			}
-			//close out buffer
-			try {
-				out.close();
-			} catch (Exception e) {
-				plugin.getLogger().warning("Failed to close out buffer");
-				e.printStackTrace();
-			}
 		}
+	}
+
+	private String readLine() {
+		//
+		return "";
+	}
+
+	private void write(final String message) {
+		//
 	}
 
 }
