@@ -1025,7 +1025,7 @@ public class RemoteSession {
 			plugin.getLogger().info("Starting input thread");
 			while (running) {
 				try {
-					String newLine = readLine();
+					String newLine = readLineInput();
 					//System.out.println(newLine);
 					if (newLine == null) {
 						running = false;
@@ -1055,8 +1055,8 @@ public class RemoteSession {
 				try {
 					String line;
 					while((line = outQueue.poll()) != null) {
-						write(line);
-						write("\n");
+						writeOutput(line);
+						writeOutput("\n");
 					}
 					Thread.yield();
 					Thread.sleep(1L);
@@ -1071,7 +1071,7 @@ public class RemoteSession {
 		}
 	}
 
-	private String readLine() throws IOException {
+	private String readLineInput() throws IOException {
 		// TODO(opt): Buffer reads properly
 		ByteBuffer buffer = ByteBuffer.allocate(1);
 		StringBuilder result = new StringBuilder();
@@ -1094,7 +1094,7 @@ public class RemoteSession {
 		}
 	}
 
-	private void write(final String message) throws IOException {
+	private void writeOutput(final String message) throws IOException {
 		ByteBuffer buffer = ByteBuffer.wrap(message.getBytes(StandardCharsets.UTF_8));
 		while (buffer.hasRemaining()) {
 			socket.write(buffer);
