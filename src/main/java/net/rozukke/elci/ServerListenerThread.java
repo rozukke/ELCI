@@ -3,28 +3,37 @@ package net.rozukke.elci;
 import java.io.*;
 import java.net.*;
 
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class ServerListenerThread implements Runnable {
 
-	public ServerSocket serverSocket;
+	public ServerSocketChannel serverSocket;
 
-	public SocketAddress bindAddress;
+	public UnixDomainSocketAddress bindAddress;
 
 	public boolean running = true;
 
 	private final ELCIPlugin plugin;
 
-	public ServerListenerThread(ELCIPlugin plugin, SocketAddress bindAddress) throws IOException {
+	// TODO(feat): Replace `SocketAddress` argument with `Path path`
+	public ServerListenerThread(ELCIPlugin plugin, SocketAddress _bindAddress) throws IOException {
 		this.plugin = plugin;
-		this.bindAddress = bindAddress;
-		serverSocket = new ServerSocket();
-		serverSocket.setReuseAddress(true);
-		serverSocket.bind(bindAddress);
+
+		Path path = Path.of("/tmp/elci-proxy");
+		Files.deleteIfExists(path);
+
+		this.bindAddress = UnixDomainSocketAddress.of(path);
+		this.serverSocket = ServerSocketChannel.open(StandardProtocolFamily.UNIX);
+		this.serverSocket.bind(this.bindAddress);
 	}
 
 	public void run() {
 		while (running) {
 			try {
-				Socket newConnection = serverSocket.accept();
+				SocketChannel newConnection = serverSocket.accept();
 				if (!running) return;
 				plugin.handleConnection(new RemoteSession(plugin, newConnection));
 			} catch (Exception e) {
