@@ -16,7 +16,9 @@ import org.bukkit.util.Vector;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Iterator;
@@ -1056,7 +1058,6 @@ public class RemoteSession {
 						write(line);
 						write("\n");
 					}
-					// flush();
 					Thread.yield();
 					Thread.sleep(1L);
 				} catch (Exception e) {
@@ -1070,13 +1071,34 @@ public class RemoteSession {
 		}
 	}
 
-	private String readLine() {
-		//
-		return "";
+	private String readLine() throws IOException {
+		// TODO(opt): Buffer reads properly
+		ByteBuffer buffer = ByteBuffer.allocate(1);
+		StringBuilder result = new StringBuilder();
+
+		while (true) {
+			buffer.clear();
+			int bytesRead = socket.read(buffer);
+
+			if (bytesRead == -1) {
+				// EOF
+				return result.length() > 0 ? result.toString() : null;
+			}
+
+			buffer.flip();
+			char ch = (char) buffer.get();
+			if (ch == '\n') {
+				return result.toString();
+			}
+			result.append(ch);
+		}
 	}
 
-	private void write(final String message) {
-		//
+	private void write(final String message) throws IOException {
+		ByteBuffer buffer = ByteBuffer.wrap(message.getBytes(StandardCharsets.UTF_8));
+		while (buffer.hasRemaining()) {
+			socket.write(buffer);
+		}
 	}
 
 }
