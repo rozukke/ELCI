@@ -142,7 +142,8 @@ public class RemoteSession {
 					if (player==null) {
 						break;
 					}
-					player.performCommand(args[0]);
+
+					player.performCommand(String.join(",", args));
 					break;
 				}
 				case "world.getBlock": {
