@@ -12,7 +12,7 @@ import org.bukkit.World;
 //import org.bukkit.craftbukkit.v1_9_R1.CraftWorld;
 import org.testng.Assert;
 
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 
 public class SessionStepDefs {
 
@@ -28,7 +28,7 @@ public class SessionStepDefs {
 	private ELCIPlugin plugin;
 
 	@Mocked
-	private Socket socket;
+	private SocketChannel socket;
 
 
 	@Given("^The location type (.*)$")
