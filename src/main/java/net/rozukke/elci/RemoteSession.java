@@ -505,9 +505,7 @@ public class RemoteSession {
 					break;
 				}
 				case "world.getHeight":
-					send(world.getHighestBlockYAt(parseRelativeBlockLocation(args[0], "0", args[1])) - origin.getBlockY());
-
-					// entity.getTile
+					send(getHeight(parseRelativeBlockLocation(args[0], "0", args[1])));
 					break;
 				case "world.getHeights": {
 					Location loc1 = parseRelativeBlockLocation(args[0], "0", args[1]);
@@ -737,6 +735,81 @@ public class RemoteSession {
 		}
 	}
 
+	private boolean isBlockSolid(Block block) {
+		if (!block.getType().isBlock() || block.getType().getId() == 0) {
+			return false;
+		}
+		switch (block.getType()) {
+			case AIR:
+			case SAPLING:
+			case POWERED_RAIL:
+			case DETECTOR_RAIL:
+			case LONG_GRASS:
+			case DEAD_BUSH:
+			case PISTON_MOVING_PIECE:
+			case YELLOW_FLOWER:
+			case RED_ROSE:
+			case BROWN_MUSHROOM:
+			case RED_MUSHROOM:
+			case TORCH:
+			case FIRE:
+			case REDSTONE_WIRE:
+			case CROPS:
+			case SIGN_POST:
+			case LADDER:
+			case RAILS:
+			case WALL_SIGN:
+			case LEVER:
+			case STONE_PLATE:
+			case WOOD_PLATE:
+			case REDSTONE_TORCH_OFF:
+			case REDSTONE_TORCH_ON:
+			case STONE_BUTTON:
+			case SNOW:
+			case SUGAR_CANE_BLOCK:
+			case DIODE_BLOCK_OFF:
+			case DIODE_BLOCK_ON:
+			case TRAP_DOOR:
+			case PUMPKIN_STEM:
+			case MELON_STEM:
+			case VINE:
+			case WATER_LILY:
+			case NETHER_WARTS:
+			case COCOA:
+			case TRIPWIRE_HOOK:
+			case TRIPWIRE:
+			case CARROT:
+			case POTATO:
+			case WOOD_BUTTON:
+			case GOLD_PLATE:
+			case IRON_PLATE:
+			case REDSTONE_COMPARATOR_OFF:
+			case REDSTONE_COMPARATOR_ON:
+			case ACTIVATOR_RAIL:
+			case DOUBLE_PLANT:
+			case STANDING_BANNER:
+			case WALL_BANNER:
+			case BEETROOT_BLOCK:
+			case STRUCTURE_VOID:
+				return false;
+			default:
+				return true;
+		}
+	}
+
+	private int getHeight(Location loc) {
+		final World world = loc.getWorld();
+		loc.setY(255);
+		while (loc.getY() >= 0) {
+			final Block block = world.getBlockAt(loc);
+			if (isBlockSolid(block)) {
+				return (int)loc.getY() + 1;
+			}
+			loc.setY(loc.getY() - 1);
+		}
+		return 0;
+	}
+
 	// create a cuboid of lots of blocks 
 	private void setCuboid(Location pos1, Location pos2, int blockType, byte data) {
 		int minX, maxX, minY, maxY, minZ, maxZ;
@@ -796,7 +869,7 @@ public class RemoteSession {
 		for (int x = minX; x <= maxX; ++x) {
 			for (int z = minZ; z <= maxZ; ++z) {
 				// Find the highest block at this x, z coordinate
-				int height = world.getHighestBlockYAt(x, z);
+				int height = getHeight(new Location(world, x, 0, z));
 				// Store the height in string
 				heightData.append(height).append(',');
 			}
